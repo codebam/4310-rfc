@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="1407" submissionType="IETF" category="exp" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" consensus="true" number="1407">
+
+<front>
+<title abbrev="FC">FooChat</title><seriesInfo value="1407" stream="IETF" status="experimental" name="RFC"></seriesInfo>
+<author surname="Behan, Dsane-Selby"><organization></organization><address><postal><street></street>
+</postal></address></author>
+<date/>
+<area>Internet</area>
+<workgroup>Network Working Group</workgroup>
+
+<abstract>
+<t>There were not enough chat protocols, FooChat allows seamless communication
+between clients and servers. The simplicity of this protocol makes it a good
+example for low level networking.</t>
+</abstract>
+
+</front>
+
+<middle>
+
+<section anchor="introduction"><name>Introduction</name>
+<t>Most chat protocols are very complex and require unncessary bandwidth being
+used. FooChat solves this problem by implementing a simple protocol for
+communication that is also bandwidth efficient.</t>
+
+<section anchor="servers"><name>Servers</name>
+<t>The server of FC, provides a point to which clients may connect to to
+communicate with each other.</t>
+</section>
+
+<section anchor="clients"><name>Clients</name>
+<t>Clients of FC connect to a central server in which they can communicate and
+send messages to other clients.</t>
+</section>
+
+<section anchor="terminology"><name>Terminology</name>
+<t>The keywords <bcp14>MUST</bcp14>, <bcp14>MUST NOT</bcp14>, <bcp14>REQUIRED</bcp14>, <bcp14>SHALL</bcp14>, <bcp14>SHALL NOT</bcp14>, <bcp14>SHOULD</bcp14>,
+<bcp14>SHOULD NOT</bcp14>, <bcp14>RECOMMENDED</bcp14>, <bcp14>MAY</bcp14>, and <bcp14>OPTIONAL</bcp14>, when they appear in this
+document, are to be interpreted as described in <xref target="RFC2119"></xref>.</t>
+</section>
+</section>
+
+<section anchor="the-fc-specification"><name>The FC Specification</name>
+
+<section anchor="overview"><name>Overview</name>
+<t>The FC protocol as described is for use for client to server connections.</t>
+</section>
+
+<section anchor="connecting-to-the-server"><name>Connecting to the server</name>
+<t>Clients <bcp14>MUST</bcp14> connect to the server using TCP packets. Clients <bcp14>MUST</bcp14> also
+connect on port <strong>682651</strong>.</t>
+<t>To initiate a connection clients <bcp14>SHALL</bcp14> send a TCP packet containing the
+message LOGN, a username, and a code version number.</t>
+<t>The server <bcp14>SHALL</bcp14> acknowledge the login by sending a TCP packet containing
+SUCC, the user id.</t>
+<t>The connection is made as follows:</t>
+
+<artwork align="left">Client -&gt; Server LOGN bob FC1
+Server -&gt; Client SUCC 1
+</artwork>
+</section>
+
+<section anchor="disconnecting-from-the-server"><name>Disconnecting from the server</name>
+<t>Clients <bcp14>SHOULD</bcp14> send a GDBY (goodbye) message when disconnecting from the
+server.</t>
+
+<artwork align="left">Client -&gt; Server GDBY
+</artwork>
+</section>
+
+<section anchor="sending-messages"><name>Sending messages</name>
+<t>Clients send messages by sending TCP packets with the destination user ID as
+well as the message that you want to send.</t>
+<t>Example:</t>
+
+<artwork align="left">Client -&gt; Server SEND 2:hello world
+</artwork>
+<t>If messages are sent to the server ID of 0, that message will be broadcast to
+all other clients connected to the server.</t>
+
+<artwork align="left">Client -&gt; Server SEND 0:message to all clients
+Client -&gt; Server SEND all:message to all clients
+</artwork>
+</section>
+
+<section anchor="receiving-messages"><name>Receiving messages</name>
+<t>Clients <bcp14>MUST</bcp14> implement a receive method such that they are able to identify
+the ID of the messages being received. Server messages always come from ID 0.
+They will include the user that is sending the message, followed by the content
+of the message.</t>
+<t>Example:</t>
+
+<artwork align="left">Server -&gt; Client RECV 2:hello world
+</artwork>
+</section>
+
+<section anchor="server-broadcasts"><name>Server broadcasts</name>
+<t>When a new client connects to the server, the server will broadcast a message
+to all clients telling them both the user ID and the username of the new
+client. Clients are required to keep track of all connected clients.</t>
+<t>Example:</t>
+
+<artwork align="left">Server -&gt; Client CONN 2:bob
+Server -&gt; Client CONN 3:alice
+</artwork>
+<t>When a client disconnects from the server the server will broadcast a message
+containing the ID of the disconnecting client. It is up to clients to remove
+the disconnecting client from their list of active clients.</t>
+<t>Example:</t>
+
+<artwork align="left">Client -&gt; Server DISC 2
+</artwork>
+</section>
+
+<section anchor="getting-a-list-of-connected-clients"><name>Getting a list of connected clients</name>
+<t>If clients send a message containing WHOO the server <bcp14>MUST</bcp14> send a response
+with all currently connected clients. It is then up to the client to update
+it's list of currently connected users.</t>
+
+<artwork align="left">Client -&gt; Server WHOO
+Server -&gt; Client CONN 1:sara
+Server -&gt; Client CONN 2:bob
+Server -&gt; Client CONN 3:alice
+</artwork>
+</section>
+</section>
+
+<section anchor="error-messages"><name>Error messages</name>
+
+<section anchor="sending-a-message-to-a-non-existing-client"><name>Sending a message to a non-existing client</name>
+<t>If clients try to send messages to clients that aren't connected the server
+sends a EROR 1 message indicating that the client is no longer connected. It is
+then up to the client to check the list of connected clients using a WHOO
+command.</t>
+
+<artwork align="left">Client -&gt; Server SEND 2:hello
+Server -&gt; Client EROR 1
+Client -&gt; Server WHOO
+Server -&gt; Client CONN 1:sara
+Server -&gt; Client CONN 3:alice
+</artwork>
+</section>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+</references>
+
+</back>
+
+</rfc>

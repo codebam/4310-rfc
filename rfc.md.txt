@@ -1,0 +1,205 @@
+
+
+
+
+Internet Engineering Task Force (IETF)                    B. Dsane-Selby
+Request for Comments: 1407                             13 September 2019
+Category: Experimental                                                  
+ISSN: 2070-1721
+
+
+                                FooChat
+
+Abstract
+
+   There were not enough chat protocols, FooChat allows seamless
+   communication between clients and servers.  The simplicity of this
+   protocol makes it a good example for low level networking.
+
+Status of This Memo
+
+   This document is not an Internet Standards Track specification; it is
+   published for examination, experimental implementation, and
+   evaluation.
+
+   This document defines an Experimental Protocol for the Internet
+   community.  This document is a product of the Internet Engineering
+   Task Force (IETF).  It represents the consensus of the IETF
+   community.  It has received public review and has been approved for
+   publication by the Internet Engineering Steering Group (IESG).  Not
+   all documents approved by the IESG are candidates for any level of
+   Internet Standard; see Section 2 of RFC 7841.
+
+   Information about the current status of this document, any errata,
+   and how to provide feedback on it may be obtained at
+   https://www.rfc-editor.org/info/rfc1407.
+
+Copyright Notice
+
+   Copyright (c) 2019 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+Table of Contents
+
+   1.  Introduction
+     1.1.  Servers
+     1.2.  Clients
+     1.3.  Terminology
+   2.  The FC Specification
+     2.1.  Overview
+     2.2.  Connecting to the server
+     2.3.  Disconnecting from the server
+     2.4.  Sending messages
+     2.5.  Receiving messages
+     2.6.  Server broadcasts
+     2.7.  Getting a list of connected clients
+   3.  Error messages
+     3.1.  Sending a message to a non-existing client
+   4.  Normative References
+   Author's Address
+
+1.  Introduction
+
+   Most chat protocols are very complex and require unncessary bandwidth
+   being used.  FooChat solves this problem by implementing a simple
+   protocol for communication that is also bandwidth efficient.
+
+1.1.  Servers
+
+   The server of FC, provides a point to which clients may connect to to
+   communicate with each other.
+
+1.2.  Clients
+
+   Clients of FC connect to a central server in which they can
+   communicate and send messages to other clients.
+
+1.3.  Terminology
+
+   The keywords MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD,
+   SHOULD NOT, RECOMMENDED, MAY, and OPTIONAL, when they appear in this
+   document, are to be interpreted as described in [RFC2119].
+
+2.  The FC Specification
+
+2.1.  Overview
+
+   The FC protocol as described is for use for client to server
+   connections.
+
+2.2.  Connecting to the server
+
+   Clients MUST connect to the server using TCP packets.  Clients MUST
+   also connect on port *682651*.
+
+   To initiate a connection clients SHALL send a TCP packet containing
+   the message LOGN, a username, and a code version number.
+
+   The server SHALL acknowledge the login by sending a TCP packet
+   containing SUCC, the user id.
+
+   The connection is made as follows:
+
+   Client -> Server LOGN bob FC1
+   Server -> Client SUCC 1
+
+2.3.  Disconnecting from the server
+
+   Clients SHOULD send a GDBY (goodbye) message when disconnecting from
+   the server.
+
+   Client -> Server GDBY
+
+2.4.  Sending messages
+
+   Clients send messages by sending TCP packets with the destination
+   user ID as well as the message that you want to send.
+
+   Example:
+
+   Client -> Server SEND 2:hello world
+
+   If messages are sent to the server ID of 0, that message will be
+   broadcast to all other clients connected to the server.
+
+   Client -> Server SEND 0:message to all clients
+   Client -> Server SEND all:message to all clients
+
+2.5.  Receiving messages
+
+   Clients MUST implement a receive method such that they are able to
+   identify the ID of the messages being received.  Server messages
+   always come from ID 0.  They will include the user that is sending
+   the message, followed by the content of the message.
+
+   Example:
+
+   Server -> Client RECV 2:hello world
+
+2.6.  Server broadcasts
+
+   When a new client connects to the server, the server will broadcast a
+   message to all clients telling them both the user ID and the username
+   of the new client.  Clients are required to keep track of all
+   connected clients.
+
+   Example:
+
+   Server -> Client CONN 2:bob
+   Server -> Client CONN 3:alice
+
+   When a client disconnects from the server the server will broadcast a
+   message containing the ID of the disconnecting client.  It is up to
+   clients to remove the disconnecting client from their list of active
+   clients.
+
+   Example:
+
+   Client -> Server DISC 2
+
+2.7.  Getting a list of connected clients
+
+   If clients send a message containing WHOO the server MUST send a
+   response with all currently connected clients.  It is then up to the
+   client to update it's list of currently connected users.
+
+   Client -> Server WHOO
+   Server -> Client CONN 1:sara
+   Server -> Client CONN 2:bob
+   Server -> Client CONN 3:alice
+
+3.  Error messages
+
+3.1.  Sending a message to a non-existing client
+
+   If clients try to send messages to clients that aren't connected the
+   server sends a EROR 1 message indicating that the client is no longer
+   connected.  It is then up to the client to check the list of
+   connected clients using a WHOO command.
+
+   Client -> Server SEND 2:hello
+   Server -> Client EROR 1
+   Client -> Server WHOO
+   Server -> Client CONN 1:sara
+   Server -> Client CONN 3:alice
+
+4.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+Author's Address
+
+   Behan, Dsane-Selby
