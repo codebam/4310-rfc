@@ -180,18 +180,6 @@ Table of Contents
 
 3.  Error messages
 
-3.1.  Sending a message to a non-existing client
-
-   If clients try to send messages to clients that aren't connected the
-   server sends a EROR 1 message indicating that the client is no longer
-   connected.  It is then up to the client to check the list of
-   connected clients using a WHOO command.
-
-   Client -> Server SEND 2:hello
-   Server -> Client EROR 1
-   Client -> Server WHOO
-   Server -> Client CONN 1:sara
-   Server -> Client CONN 3:alice
 
 4.  Normative References
 
