@@ -4,7 +4,7 @@
 
 <front>
 <title abbrev="FC">FooChat</title><seriesInfo value="1407" stream="IETF" status="experimental" name="RFC"></seriesInfo>
-<author surname="Behan, Dsane-Selby"><organization></organization><address><postal><street></street>
+<author initials="S. B., K. D. S." surname="Behan, Dsane-Selby" fullname="Sean Behan, Kevin Dsane-Selby"><organization></organization><address><postal><street></street>
 </postal></address></author>
 <date/>
 <area>Internet</area>
@@ -48,6 +48,21 @@ document, are to be interpreted as described in <xref target="RFC2119"></xref>.<
 <t>The FC protocol as described is for use for client to server connections.</t>
 </section>
 
+<section anchor="packet-format"><name>Packet format</name>
+<t>Each packet is sent in the JSON format outlined in <xref target="RFC8259"></xref>.</t>
+<t>The packet structure is as follows.</t>
+
+<artwork align="left">{ 
+  &quot;number&quot;: 1,
+  &quot;version&quot;: 1,
+  &quot;from&quot;: &quot;alice&quot;,
+  &quot;to&quot;: &quot;bob&quot;,
+  &quot;verb&quot; &quot;SEND&quot;,
+  &quot;data&quot;: &quot;hello bob, how are you?&quot;
+}
+</artwork>
+</section>
+
 <section anchor="connecting-to-the-server"><name>Connecting to the server</name>
 <t>Clients <bcp14>MUST</bcp14> connect to the server using TCP packets. Clients <bcp14>MUST</bcp14> also
 connect on port <strong>682651</strong>.</t>
@@ -57,89 +72,128 @@ message LOGN, a username, and a code version number.</t>
 SUCC, the user id.</t>
 <t>The connection is made as follows:</t>
 
-<artwork align="left">Client -&gt; Server LOGN bob FC1
-Server -&gt; Client SUCC 1
+<artwork align="left">Client -&gt; Server
+{ 
+  &quot;number&quot;: 1,
+  &quot;version&quot;: 1,
+  &quot;from&quot;: &quot;alice&quot;,
+  &quot;verb&quot; &quot;LOGN&quot;,
+}
+
+Server -&gt; Client
+{ 
+  &quot;number&quot;: 2,
+  &quot;version&quot;: 1,
+  &quot;verb&quot; &quot;SUCC&quot;,
+}
 </artwork>
 </section>
 
 <section anchor="disconnecting-from-the-server"><name>Disconnecting from the server</name>
-<t>Clients <bcp14>SHOULD</bcp14> send a GDBY (goodbye) message when disconnecting from the
+<t>Clients <bcp14>SHOULD</bcp14> send a DISC (disconnect) message when disconnecting from the
 server.</t>
 
-<artwork align="left">Client -&gt; Server GDBY
+<artwork align="left">Client -&gt; Server
+{
+  &quot;number&quot;: 3,
+  &quot;version&quot;: 1,
+  &quot;from&quot;: &quot;alice&quot;,
+  &quot;verb&quot; &quot;GDBY&quot;,
+}
 </artwork>
 </section>
 
 <section anchor="sending-messages"><name>Sending messages</name>
-<t>Clients send messages by sending TCP packets with the destination user ID as
+<t>Clients send messages by sending TCP packets with the destination username as
 well as the message that you want to send.</t>
 <t>Example:</t>
 
-<artwork align="left">Client -&gt; Server SEND 2:hello world
+<artwork align="left">Client -&gt; Server
+{
+  &quot;number&quot;: 4,
+  &quot;version&quot;: 1,
+  &quot;from&quot;: &quot;alice&quot;,
+  &quot;to&quot;: &quot;bob&quot;,
+  &quot;verb&quot; &quot;SEND&quot;,
+  &quot;data&quot;: &quot;hello bob&quot;
+}
 </artwork>
-<t>If messages are sent to the server ID of 0, that message will be broadcast to
+</section>
+
+<section anchor="sending-messages-to-all-clients"><name>Sending messages to all clients</name>
+<t>If messages are sent with a verb of SALL, that message will be broadcast to
 all other clients connected to the server.</t>
 
-<artwork align="left">Client -&gt; Server SEND 0:message to all clients
-Client -&gt; Server SEND all:message to all clients
+<artwork align="left">Client -&gt; Server
+{
+  &quot;number&quot;: 5,
+  &quot;version&quot;: 1,
+  &quot;from&quot;: &quot;alice&quot;,
+  &quot;verb&quot; &quot;SALL&quot;,
+  &quot;data&quot;: &quot;message to all clients&quot;
+}
 </artwork>
 </section>
 
 <section anchor="receiving-messages"><name>Receiving messages</name>
-<t>Clients <bcp14>MUST</bcp14> implement a receive method such that they are able to identify
-the ID of the messages being received. Server messages always come from ID 0.
-They will include the user that is sending the message, followed by the content
-of the message.</t>
+<t>Clients implement a receive method such that they are able to recieve and
+display incoming messages.</t>
 <t>Example:</t>
 
-<artwork align="left">Server -&gt; Client RECV 2:hello world
+<artwork align="left">Server -&gt; Client
+{
+  &quot;number&quot;: 6,
+  &quot;version&quot;: 1,
+  &quot;from&quot;: &quot;bob&quot;,
+  &quot;verb&quot; &quot;RECV&quot;,
+  &quot;data&quot;: &quot;good thanks, how are you?&quot;
+}
 </artwork>
 </section>
 
 <section anchor="server-broadcasts"><name>Server broadcasts</name>
 <t>When a new client connects to the server, the server will broadcast a message
-to all clients telling them both the user ID and the username of the new
-client. Clients are required to keep track of all connected clients.</t>
+to all clients telling them the username of all connected clients. It is the
+clients job to keep track of connected clients.</t>
+<t>The data field holds a JSON array of all clients that are connected.</t>
 <t>Example:</t>
 
-<artwork align="left">Server -&gt; Client CONN 2:bob
-Server -&gt; Client CONN 3:alice
+<artwork align="left">Server -&gt; Client
+{
+  &quot;number&quot;: 7,
+  &quot;version&quot;: 1,
+  &quot;verb&quot; &quot;CONN&quot;,
+  &quot;data&quot;: {[&quot;alice&quot;, &quot;bob&quot;]}
+}
 </artwork>
 <t>When a client disconnects from the server the server will broadcast a message
 containing the ID of the disconnecting client. It is up to clients to remove
 the disconnecting client from their list of active clients.</t>
 <t>Example:</t>
 
-<artwork align="left">Client -&gt; Server DISC 2
+<artwork align="left">Server -&gt; Client
+{
+  &quot;number&quot;: 8,
+  &quot;version&quot;: 1,
+  &quot;verb&quot; &quot;DISC&quot;,
+  &quot;data&quot;: {[&quot;alice&quot;]}
+}
 </artwork>
 </section>
 
 <section anchor="getting-a-list-of-connected-clients"><name>Getting a list of connected clients</name>
-<t>If clients send a message containing WHOO the server <bcp14>MUST</bcp14> send a response
+<t>If clients send a message containing WHOO the server <bcp14>SHOULD</bcp14> send a response
 with all currently connected clients. It is then up to the client to update
 it's list of currently connected users.</t>
+<t>The data field holds a JSON array of all clients that are connected.</t>
 
-<artwork align="left">Client -&gt; Server WHOO
-Server -&gt; Client CONN 1:sara
-Server -&gt; Client CONN 2:bob
-Server -&gt; Client CONN 3:alice
-</artwork>
-</section>
-</section>
-
-<section anchor="error-messages"><name>Error messages</name>
-
-<section anchor="sending-a-message-to-a-non-existing-client"><name>Sending a message to a non-existing client</name>
-<t>If clients try to send messages to clients that aren't connected the server
-sends a EROR 1 message indicating that the client is no longer connected. It is
-then up to the client to check the list of connected clients using a WHOO
-command.</t>
-
-<artwork align="left">Client -&gt; Server SEND 2:hello
-Server -&gt; Client EROR 1
-Client -&gt; Server WHOO
-Server -&gt; Client CONN 1:sara
-Server -&gt; Client CONN 3:alice
+<artwork align="left">Server -&gt; Client
+{
+  &quot;number&quot;: 7,
+  &quot;version&quot;: 1,
+  &quot;verb&quot; &quot;CONN&quot;,
+  &quot;data&quot;: {[&quot;alice&quot;, &quot;bob&quot;, &quot;abc&quot;]}
+}
 </artwork>
 </section>
 </section>
@@ -149,6 +203,7 @@ Server -&gt; Client CONN 3:alice
 <back>
 <references><name>Normative References</name>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8259.xml"/>
 </references>
 
 </back>

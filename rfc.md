@@ -15,9 +15,9 @@ stream = "IETF"
 status = "experimental"
 
 [[author]]
-# initials="S. B., K. D. S."
+initials="S. B., K. D. S."
 surname="Behan, Dsane-Selby"
-#fullname="Sean Behan, Kevin Dsane-Selby"
+fullname="Sean Behan, Kevin Dsane-Selby"
 #abbrev = "S & K"
 #role = "editor"
 #organization = "AT&T Labs Research"
@@ -64,6 +64,22 @@ document, are to be interpreted as described in [@!RFC2119].
 
 The FC protocol as described is for use for client to server connections.
 
+## Packet format
+
+Each packet is sent in the JSON format outlined in [@!RFC8259].
+
+The packet structure is as follows.
+
+{align="left"}
+	{ 
+	  "number": 1,
+	  "version": 1,
+	  "from": "alice",
+	  "to": "bob",
+	  "verb" "SEND",
+	  "data": "hello bob, how are you?"
+	}
+
 ## Connecting to the server
 
 Clients **MUST** connect to the server using TCP packets. Clients **MUST** also
@@ -78,57 +94,103 @@ SUCC, the user id.
 The connection is made as follows:
 
 {align="left"}
-	Client -> Server LOGN bob FC1
-	Server -> Client SUCC 1
+	Client -> Server
+	{ 
+	  "number": 1,
+	  "version": 1,
+	  "from": "alice",
+	  "verb" "LOGN",
+	}
+
+	Server -> Client
+	{ 
+	  "number": 2,
+	  "version": 1,
+	  "verb" "SUCC",
+	}
 
 ## Disconnecting from the server
 
-Clients **SHOULD** send a GDBY (goodbye) message when disconnecting from the
+Clients **SHOULD** send a DISC (disconnect) message when disconnecting from the
 server.
 
 {align="left"}
-	Client -> Server GDBY
+	Client -> Server
+	{
+	  "number": 3,
+	  "version": 1,
+	  "from": "alice",
+	  "verb" "GDBY",
+	}
 
 ## Sending messages
 
-Clients send messages by sending TCP packets with the destination user ID as
+Clients send messages by sending TCP packets with the destination username as
 well as the message that you want to send.
 
 Example:
 
 {align="left"}
-	Client -> Server SEND 2:hello world
+	Client -> Server
+	{
+	  "number": 4,
+	  "version": 1,
+	  "from": "alice",
+	  "to": "bob",
+	  "verb" "SEND",
+	  "data": "hello bob"
+	}
 
-If messages are sent to the server ID of 0, that message will be broadcast to
+## Sending messages to all clients
+
+If messages are sent with a verb of SALL, that message will be broadcast to
 all other clients connected to the server.
 
 {align="left"}
-	Client -> Server SEND 0:message to all clients
-	Client -> Server SEND all:message to all clients
+	Client -> Server
+	{
+	  "number": 5,
+	  "version": 1,
+	  "from": "alice",
+	  "verb" "SALL",
+	  "data": "message to all clients"
+	}
 
 ## Receiving messages
 
-Clients **MUST** implement a receive method such that they are able to identify
-the ID of the messages being received. Server messages always come from ID 0.
-They will include the user that is sending the message, followed by the content
-of the message.
+Clients implement a receive method such that they are able to recieve and
+display incoming messages.
 
 Example:
 
 {align="left"}
-	Server -> Client RECV 2:hello world
+	Server -> Client
+	{
+	  "number": 6,
+	  "version": 1,
+	  "from": "bob",
+	  "verb" "RECV",
+	  "data": "good thanks, how are you?"
+	}
 
 ## Server broadcasts
 
 When a new client connects to the server, the server will broadcast a message
-to all clients telling them both the user ID and the username of the new
-client. Clients are required to keep track of all connected clients.
+to all clients telling them the username of all connected clients. It is the
+clients job to keep track of connected clients.
+
+The data field holds a JSON array of all clients that are connected.
 
 Example:
 
 {align="left"}
-	Server -> Client CONN 2:bob
-	Server -> Client CONN 3:alice
+	Server -> Client
+	{
+	  "number": 7,
+	  "version": 1,
+	  "verb" "CONN",
+	  "data": {["alice", "bob"]}
+	}
 
 When a client disconnects from the server the server will broadcast a message
 containing the ID of the disconnecting client. It is up to clients to remove
@@ -137,34 +199,28 @@ the disconnecting client from their list of active clients.
 Example:
 
 {align="left"}
-	Client -> Server DISC 2
+	Server -> Client
+	{
+	  "number": 8,
+	  "version": 1,
+	  "verb" "DISC",
+	  "data": {["alice"]}
+	}
 
 ## Getting a list of connected clients
 
-If clients send a message containing WHOO the server **MUST** send a response
+If clients send a message containing WHOO the server **SHOULD** send a response
 with all currently connected clients. It is then up to the client to update
 it's list of currently connected users.
 
-{align="left"}
-	Client -> Server WHOO
-	Server -> Client CONN 1:sara
-	Server -> Client CONN 2:bob
-	Server -> Client CONN 3:alice
-
-# Error messages
-
-## Sending a message to a non-existing client
-
-If clients try to send messages to clients that aren't connected the server
-sends a EROR 1 message indicating that the client is no longer connected. It is
-then up to the client to check the list of connected clients using a WHOO
-command.
+The data field holds a JSON array of all clients that are connected.
 
 {align="left"}
-	Client -> Server SEND 2:hello
-	Server -> Client EROR 1
-	Client -> Server WHOO
-	Server -> Client CONN 1:sara
-	Server -> Client CONN 3:alice
-
+	Server -> Client
+	{
+	  "number": 7,
+	  "version": 1,
+	  "verb" "CONN",
+	  "data": {["alice", "bob", "abc"]}
+	}
 {backmatter}
