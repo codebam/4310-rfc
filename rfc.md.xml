@@ -83,7 +83,6 @@ SUCC, the user id.</t>
 Server -&gt; Client
 { 
   &quot;number&quot;: 2,
-  &quot;version&quot;: 1,
   &quot;verb&quot; &quot;SUCC&quot;,
 }
 </artwork>
@@ -96,9 +95,8 @@ server.</t>
 <artwork align="left">Client -&gt; Server
 {
   &quot;number&quot;: 3,
-  &quot;version&quot;: 1,
   &quot;from&quot;: &quot;alice&quot;,
-  &quot;verb&quot; &quot;GDBY&quot;,
+  &quot;verb&quot; &quot;DISC&quot;,
 }
 </artwork>
 </section>
@@ -111,7 +109,6 @@ well as the message that you want to send.</t>
 <artwork align="left">Client -&gt; Server
 {
   &quot;number&quot;: 4,
-  &quot;version&quot;: 1,
   &quot;from&quot;: &quot;alice&quot;,
   &quot;to&quot;: &quot;bob&quot;,
   &quot;verb&quot; &quot;SEND&quot;,
@@ -127,7 +124,6 @@ all other clients connected to the server.</t>
 <artwork align="left">Client -&gt; Server
 {
   &quot;number&quot;: 5,
-  &quot;version&quot;: 1,
   &quot;from&quot;: &quot;alice&quot;,
   &quot;verb&quot; &quot;SALL&quot;,
   &quot;data&quot;: &quot;message to all clients&quot;
@@ -143,7 +139,6 @@ display incoming messages.</t>
 <artwork align="left">Server -&gt; Client
 {
   &quot;number&quot;: 6,
-  &quot;version&quot;: 1,
   &quot;from&quot;: &quot;bob&quot;,
   &quot;verb&quot; &quot;RECV&quot;,
   &quot;data&quot;: &quot;good thanks, how are you?&quot;
@@ -161,7 +156,6 @@ clients job to keep track of connected clients.</t>
 <artwork align="left">Server -&gt; Client
 {
   &quot;number&quot;: 7,
-  &quot;version&quot;: 1,
   &quot;verb&quot; &quot;CONN&quot;,
   &quot;data&quot;: {[&quot;alice&quot;, &quot;bob&quot;]}
 }
@@ -174,9 +168,8 @@ the disconnecting client from their list of active clients.</t>
 <artwork align="left">Server -&gt; Client
 {
   &quot;number&quot;: 8,
-  &quot;version&quot;: 1,
   &quot;verb&quot; &quot;DISC&quot;,
-  &quot;data&quot;: {[&quot;alice&quot;]}
+  &quot;data&quot;: &quot;alice&quot;
 }
 </artwork>
 </section>
@@ -189,10 +182,9 @@ it's list of currently connected users.</t>
 
 <artwork align="left">Server -&gt; Client
 {
-  &quot;number&quot;: 7,
-  &quot;version&quot;: 1,
+  &quot;number&quot;: 9,
   &quot;verb&quot; &quot;CONN&quot;,
-  &quot;data&quot;: {[&quot;alice&quot;, &quot;bob&quot;, &quot;abc&quot;]}
+  &quot;data&quot;: {[&quot;bob&quot;, &quot;abc&quot;]}
 }
 </artwork>
 </section>

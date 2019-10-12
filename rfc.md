@@ -105,7 +105,6 @@ The connection is made as follows:
 	Server -> Client
 	{ 
 	  "number": 2,
-	  "version": 1,
 	  "verb" "SUCC",
 	}
 
@@ -118,9 +117,8 @@ server.
 	Client -> Server
 	{
 	  "number": 3,
-	  "version": 1,
 	  "from": "alice",
-	  "verb" "GDBY",
+	  "verb" "DISC",
 	}
 
 ## Sending messages
@@ -134,7 +132,6 @@ Example:
 	Client -> Server
 	{
 	  "number": 4,
-	  "version": 1,
 	  "from": "alice",
 	  "to": "bob",
 	  "verb" "SEND",
@@ -150,7 +147,6 @@ all other clients connected to the server.
 	Client -> Server
 	{
 	  "number": 5,
-	  "version": 1,
 	  "from": "alice",
 	  "verb" "SALL",
 	  "data": "message to all clients"
@@ -167,7 +163,6 @@ Example:
 	Server -> Client
 	{
 	  "number": 6,
-	  "version": 1,
 	  "from": "bob",
 	  "verb" "RECV",
 	  "data": "good thanks, how are you?"
@@ -187,7 +182,6 @@ Example:
 	Server -> Client
 	{
 	  "number": 7,
-	  "version": 1,
 	  "verb" "CONN",
 	  "data": {["alice", "bob"]}
 	}
@@ -202,9 +196,8 @@ Example:
 	Server -> Client
 	{
 	  "number": 8,
-	  "version": 1,
 	  "verb" "DISC",
-	  "data": {["alice"]}
+	  "data": "alice"
 	}
 
 ## Getting a list of connected clients
@@ -218,9 +211,8 @@ The data field holds a JSON array of all clients that are connected.
 {align="left"}
 	Server -> Client
 	{
-	  "number": 7,
-	  "version": 1,
+	  "number": 9,
 	  "verb" "CONN",
-	  "data": {["alice", "bob", "abc"]}
+	  "data": {["bob", "abc"]}
 	}
 {backmatter}

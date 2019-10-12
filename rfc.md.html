@@ -1277,7 +1277,6 @@ SUCC, the user id.<a href="#section-2.3-3" class="pilcrow">¶</a></p>
 Server -&gt; Client
 { 
   "number": 2,
-  "version": 1,
   "verb" "SUCC",
 }
 </pre><a href="#section-2.3-5" class="pilcrow">¶</a>
@@ -1295,9 +1294,8 @@ server.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
 <pre>Client -&gt; Server
 {
   "number": 3,
-  "version": 1,
   "from": "alice",
-  "verb" "GDBY",
+  "verb" "DISC",
 }
 </pre><a href="#section-2.4-2" class="pilcrow">¶</a>
 </div>
@@ -1315,7 +1313,6 @@ well as the message that you want to send.<a href="#section-2.5-1" class="pilcro
 <pre>Client -&gt; Server
 {
   "number": 4,
-  "version": 1,
   "from": "alice",
   "to": "bob",
   "verb" "SEND",
@@ -1336,7 +1333,6 @@ all other clients connected to the server.<a href="#section-2.6-1" class="pilcro
 <pre>Client -&gt; Server
 {
   "number": 5,
-  "version": 1,
   "from": "alice",
   "verb" "SALL",
   "data": "message to all clients"
@@ -1357,7 +1353,6 @@ display incoming messages.<a href="#section-2.7-1" class="pilcrow">¶</a></p>
 <pre>Server -&gt; Client
 {
   "number": 6,
-  "version": 1,
   "from": "bob",
   "verb" "RECV",
   "data": "good thanks, how are you?"
@@ -1380,7 +1375,6 @@ clients job to keep track of connected clients.<a href="#section-2.8-1" class="p
 <pre>Server -&gt; Client
 {
   "number": 7,
-  "version": 1,
   "verb" "CONN",
   "data": {["alice", "bob"]}
 }
@@ -1394,9 +1388,8 @@ the disconnecting client from their list of active clients.<a href="#section-2.8
 <pre>Server -&gt; Client
 {
   "number": 8,
-  "version": 1,
   "verb" "DISC",
-  "data": {["alice"]}
+  "data": "alice"
 }
 </pre><a href="#section-2.8-7" class="pilcrow">¶</a>
 </div>
@@ -1414,10 +1407,9 @@ it's list of currently connected users.<a href="#section-2.9-1" class="pilcrow">
 <div class="artwork art-text alignLeft" id="section-2.9-3">
 <pre>Server -&gt; Client
 {
-  "number": 7,
-  "version": 1,
+  "number": 9,
   "verb" "CONN",
-  "data": {["alice", "bob", "abc"]}
+  "data": {["bob", "abc"]}
 }
 </pre><a href="#section-2.9-3" class="pilcrow">¶</a>
 </div>
