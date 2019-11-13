@@ -3,7 +3,7 @@
 <rfc version="3" ipr="trust200902" docName="1407" submissionType="IETF" category="exp" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" consensus="true" number="1407">
 
 <front>
-<title abbrev="FC">FooChat</title><seriesInfo value="1407" stream="IETF" status="experimental" name="RFC"></seriesInfo>
+<title abbrev="FC">FooChat 2.0</title><seriesInfo value="1407" stream="IETF" status="experimental" name="RFC"></seriesInfo>
 <author initials="S. B., K. D. S." surname="Behan, Dsane-Selby" fullname="Sean Behan, Kevin Dsane-Selby"><organization></organization><address><postal><street></street>
 </postal></address></author>
 <date/>
@@ -58,7 +58,8 @@ document, are to be interpreted as described in <xref target="RFC2119"></xref>.<
   &quot;from&quot;: &quot;alice&quot;,
   &quot;to&quot;: &quot;bob&quot;,
   &quot;verb&quot; &quot;SEND&quot;,
-  &quot;data&quot;: &quot;hello bob, how are you?&quot;
+  &quot;data&quot;: &quot;hello bob, how are you?&quot;,
+  &quot;checksum&quot;: &quot;d4337b8c43aceb0567fbd4ccd09b330727120e0e96856caa6d8da6dba64ba07d&quot;
 }
 </artwork>
 </section>
@@ -185,6 +186,44 @@ it's list of currently connected users.</t>
   &quot;number&quot;: 9,
   &quot;verb&quot; &quot;CONN&quot;,
   &quot;data&quot;: {[&quot;bob&quot;, &quot;abc&quot;]}
+}
+</artwork>
+</section>
+
+<section anchor="checksums"><name>Checksums</name>
+<t>Each packet being sent should contain a checksum field with the checksum of all
+the data in the data field of the packet. The checksum must be in SHA256 format.</t>
+<t>Example is shown below.</t>
+
+<artwork align="left">Server -&gt; Client
+{
+  &quot;number&quot;: 9,
+  &quot;verb&quot; &quot;CONN&quot;,
+  &quot;data&quot;: {[&quot;bob&quot;, &quot;abc&quot;]}
+  &quot;checksum&quot;: &quot;0ad320defb0ee98b2b7500589ed330393e9e5791e2a9d1f3e66f519a83fe0830&quot;
+}
+</artwork>
+</section>
+
+<section anchor="requesting-a-packet-to-be-resent"><name>Requesting a packet to be resent</name>
+<t>If the server or client does not validate the packet checksum successfully or
+didn't recieve a packet it may request that packet to be resent by sending a
+RESEND packet where the data field contains the packet number that should be
+resent. The original packet will be sent back with no modifications aside from
+the checksum being recalculated in case of possible error.</t>
+
+<artwork align="left">Server -&gt; Client
+{
+  &quot;number&quot;: 9,
+  &quot;verb&quot; &quot;RESEND&quot;,
+  &quot;data&quot;: 3
+}
+
+Client -&gt; Server
+{
+  &quot;number&quot;: 7,
+  &quot;verb&quot; &quot;RESEND&quot;,
+  &quot;data&quot;: 2
 }
 </artwork>
 </section>

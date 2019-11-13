@@ -1,5 +1,5 @@
 %%%
-title = "FooChat"
+title = "FooChat 2.0"
 abbrev = "FC"
 # ipr = "trust200902"
 area = "Internet"
@@ -77,7 +77,8 @@ The packet structure is as follows.
 	  "from": "alice",
 	  "to": "bob",
 	  "verb" "SEND",
-	  "data": "hello bob, how are you?"
+	  "data": "hello bob, how are you?",
+	  "checksum": "d4337b8c43aceb0567fbd4ccd09b330727120e0e96856caa6d8da6dba64ba07d"
 	}
 
 ## Connecting to the server
@@ -215,4 +216,44 @@ The data field holds a JSON array of all clients that are connected.
 	  "verb" "CONN",
 	  "data": {["bob", "abc"]}
 	}
+
+## Checksums
+
+Each packet being sent should contain a checksum field with the checksum of all
+the data in the data field of the packet. The checksum must be in SHA256 format.
+
+Example is shown below.
+
+{align="left"}
+	Server -> Client
+	{
+	  "number": 9,
+	  "verb" "CONN",
+	  "data": {["bob", "abc"]}
+	  "checksum": "0ad320defb0ee98b2b7500589ed330393e9e5791e2a9d1f3e66f519a83fe0830"
+	}
+
+## Requesting a packet to be resent
+
+If the server or client does not validate the packet checksum successfully or
+didn't recieve a packet it may request that packet to be resent by sending a
+RESEND packet where the data field contains the packet number that should be
+resent. The original packet will be sent back with no modifications aside from
+the checksum being recalculated in case of possible error.
+
+{align="left"}
+	Server -> Client
+	{
+	  "number": 9,
+	  "verb" "RESEND",
+	  "data": 3
+	}
+
+	Client -> Server
+	{
+	  "number": 7,
+	  "verb" "RESEND",
+	  "data": 2
+	}
+
 {backmatter}

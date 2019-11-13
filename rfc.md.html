@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>RFC 1407: FooChat</title>
+<title>RFC 1407: FooChat 2.0</title>
 <meta content="Sean Behan, Kevin Dsane-Selby" name="author">
 <meta content="
        There were not enough chat protocols, FooChat allows seamless communication
@@ -1038,7 +1038,7 @@ aside > p {
 <thead><tr>
 <td class="left">RFC 1407</td>
 <td class="center">FC</td>
-<td class="right">October 2019</td>
+<td class="right">November 2019</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Behan, Dsane-Selby</td>
@@ -1057,7 +1057,7 @@ aside > p {
 <dd class="category">Experimental</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2019-10-11" class="published">11 October 2019</time>
+<time datetime="2019-11-12" class="published">12 November 2019</time>
     </dd>
 <dt class="label-issn">ISSN:</dt>
 <dd class="issn">2070-1721</dd>
@@ -1070,7 +1070,7 @@ aside > p {
 </dl>
 </div>
 <h1 id="rfcnum">RFC 1407</h1>
-<h1 id="title">FooChat</h1>
+<h1 id="title">FooChat 2.0</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
 <p id="section-abstract-1">There were not enough chat protocols, FooChat allows seamless communication
@@ -1170,6 +1170,12 @@ example for low level networking.<a href="#section-abstract-1" class="pilcrow">�
               <li class="toc ulEmpty" id="section-boilerplate.3-1.2.2.9">
                 <p id="section-boilerplate.3-1.2.2.9.1"><a href="#section-2.9" class="xref">2.9</a>.  <a href="#name-getting-a-list-of-connected" class="xref">Getting a list of connected clients</a><a href="#section-boilerplate.3-1.2.2.9.1" class="pilcrow">¶</a></p>
 </li>
+              <li class="toc ulEmpty" id="section-boilerplate.3-1.2.2.10">
+                <p id="section-boilerplate.3-1.2.2.10.1"><a href="#section-2.10" class="xref">2.10</a>. <a href="#name-checksums" class="xref">Checksums</a><a href="#section-boilerplate.3-1.2.2.10.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="toc ulEmpty" id="section-boilerplate.3-1.2.2.11">
+                <p id="section-boilerplate.3-1.2.2.11.1"><a href="#section-2.11" class="xref">2.11</a>. <a href="#name-requesting-a-packet-to-be-r" class="xref">Requesting a packet to be resent</a><a href="#section-boilerplate.3-1.2.2.11.1" class="pilcrow">¶</a></p>
+</li>
             </ul>
 </li>
           <li class="toc ulEmpty" id="section-boilerplate.3-1.3">
@@ -1247,7 +1253,8 @@ document, are to be interpreted as described in <span>[<a href="#RFC2119" class=
   "from": "alice",
   "to": "bob",
   "verb" "SEND",
-  "data": "hello bob, how are you?"
+  "data": "hello bob, how are you?",
+  "checksum": "d4337b8c43aceb0567fbd4ccd09b330727120e0e96856caa6d8da6dba64ba07d"
 }
 </pre><a href="#section-2.2-3" class="pilcrow">¶</a>
 </div>
@@ -1412,6 +1419,54 @@ it's list of currently connected users.<a href="#section-2.9-1" class="pilcrow">
   "data": {["bob", "abc"]}
 }
 </pre><a href="#section-2.9-3" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="checksums">
+<section id="section-2.10">
+        <h3 id="name-checksums">
+<a href="#section-2.10" class="section-number selfRef">2.10. </a><a href="#name-checksums" class="section-name selfRef">Checksums</a>
+        </h3>
+<p id="section-2.10-1">Each packet being sent should contain a checksum field with the checksum of all
+the data in the data field of the packet. The checksum must be in SHA256 format.<a href="#section-2.10-1" class="pilcrow">¶</a></p>
+<p id="section-2.10-2">Example is shown below.<a href="#section-2.10-2" class="pilcrow">¶</a></p>
+<div class="artwork art-text alignLeft" id="section-2.10-3">
+<pre>Server -&gt; Client
+{
+  "number": 9,
+  "verb" "CONN",
+  "data": {["bob", "abc"]}
+  "checksum": "0ad320defb0ee98b2b7500589ed330393e9e5791e2a9d1f3e66f519a83fe0830"
+}
+</pre><a href="#section-2.10-3" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="requesting-a-packet-to-be-resent">
+<section id="section-2.11">
+        <h3 id="name-requesting-a-packet-to-be-r">
+<a href="#section-2.11" class="section-number selfRef">2.11. </a><a href="#name-requesting-a-packet-to-be-r" class="section-name selfRef">Requesting a packet to be resent</a>
+        </h3>
+<p id="section-2.11-1">If the server or client does not validate the packet checksum successfully or
+didn't recieve a packet it may request that packet to be resent by sending a
+RESEND packet where the data field contains the packet number that should be
+resent. The original packet will be sent back with no modifications aside from
+the checksum being recalculated in case of possible error.<a href="#section-2.11-1" class="pilcrow">¶</a></p>
+<div class="artwork art-text alignLeft" id="section-2.11-2">
+<pre>Server -&gt; Client
+{
+  "number": 9,
+  "verb" "RESEND",
+  "data": 3
+}
+
+Client -&gt; Server
+{
+  "number": 7,
+  "verb" "RESEND",
+  "data": 2
+}
+</pre><a href="#section-2.11-2" class="pilcrow">¶</a>
 </div>
 </section>
 </div>

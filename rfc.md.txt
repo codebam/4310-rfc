@@ -3,12 +3,12 @@
 
 
 Internet Engineering Task Force (IETF)S. B., K. D. S. Behan, Dsane-Selby
-Request for Comments: 1407                               11 October 2019
+Request for Comments: 1407                              12 November 2019
 Category: Experimental                                                  
 ISSN: 2070-1721
 
 
-                                FooChat
+                              FooChat 2.0
 
 Abstract
 
@@ -65,6 +65,8 @@ Table of Contents
      2.7.  Receiving messages
      2.8.  Server broadcasts
      2.9.  Getting a list of connected clients
+     2.10. Checksums
+     2.11. Requesting a packet to be resent
    3.  Normative References
    Author's Address
 
@@ -109,7 +111,8 @@ Table of Contents
      "from": "alice",
      "to": "bob",
      "verb" "SEND",
-     "data": "hello bob, how are you?"
+     "data": "hello bob, how are you?",
+     "checksum": "d4337b8c43aceb0567fbd4ccd09b330727120e0e96856caa6d8da6dba64ba07d"
    }
 
 2.3.  Connecting to the server
@@ -239,6 +242,45 @@ Table of Contents
      "number": 9,
      "verb" "CONN",
      "data": {["bob", "abc"]}
+   }
+
+2.10.  Checksums
+
+   Each packet being sent should contain a checksum field with the
+   checksum of all the data in the data field of the packet.  The
+   checksum must be in SHA256 format.
+
+   Example is shown below.
+
+   Server -> Client
+   {
+     "number": 9,
+     "verb" "CONN",
+     "data": {["bob", "abc"]}
+     "checksum": "0ad320defb0ee98b2b7500589ed330393e9e5791e2a9d1f3e66f519a83fe0830"
+   }
+
+2.11.  Requesting a packet to be resent
+
+   If the server or client does not validate the packet checksum
+   successfully or didn't recieve a packet it may request that packet to
+   be resent by sending a RESEND packet where the data field contains
+   the packet number that should be resent.  The original packet will be
+   sent back with no modifications aside from the checksum being
+   recalculated in case of possible error.
+
+   Server -> Client
+   {
+     "number": 9,
+     "verb" "RESEND",
+     "data": 3
+   }
+
+   Client -> Server
+   {
+     "number": 7,
+     "verb" "RESEND",
+     "data": 2
    }
 
 3.  Normative References
